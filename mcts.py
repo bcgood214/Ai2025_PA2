@@ -56,6 +56,15 @@ class Node:
         for child in self.children:
             print(child.state)
     
+    def state_equal(self, board):
+        i = 0
+        for row in self.state:
+            if not np.array_equal(row, board[i]):
+                return False
+            i += 1
+        
+        return True
+    
     def get_child(self, board):
         for child in self.children:
             i = 0
@@ -70,7 +79,7 @@ class Node:
         return None
     
     def load_children(self):
-        moves = get_next_moves(self.state, self.player)
+        moves = check_state.get_next_moves(self.state, self.player)
         # print(moves)
         if len(self.children) == 0:
             for move in moves:
@@ -132,7 +141,7 @@ class Node:
             return
         
         children_no_playout = [c.playouts == 0 for c in self.children]
-        print(children_no_playout)
+        # print(children_no_playout)
         if True in children_no_playout:
             children_filtered = self.children[np.array([c.playouts == 0 for c in self.children])]
             if len(children_filtered) > 0:

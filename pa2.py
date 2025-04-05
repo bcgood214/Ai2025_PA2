@@ -1,8 +1,9 @@
 # Benjamin Good, Spring 2025
 import numpy as np
 import copy
-from mcts import Node, play_game
+from mcts import Node
 import check_state
+from tree import Tree
 
 def read_file(name):
     algo = ""
@@ -281,7 +282,13 @@ def place(board, player, col):
 
 def play(first_move="R", algo_r="ur", algo_y="ur"):
     board = init_board()
-    node = Node(board)
+    if algo_r == "mcts":
+        node_r = Node(board)
+        tree_r = Tree(node_r)
+    if algo_r == "mcts":
+        node_y  = Node(board)
+        node_y.player = "Y"
+        tree_y = Tree(node_y, move="Y")
     player = first_move
     over = False
     while not over:
@@ -289,12 +296,16 @@ def play(first_move="R", algo_r="ur", algo_y="ur"):
             if algo_r == "ur":
                 choice = ur(board, player)
             if algo_r == "mcts":
-                pass
+                node_r = tree_r.find_from_curr(board)
+                node_r.tree_search()
+                choice = node_r.pick_best_mcts().col_pos
         else:
             if algo_y == "ur":
                 choice = ur(board, player)
             if algo_y == "mcts":
-                pass
+                node_y = tree_y.find_from_curr(board)
+                node_y.tree_search()
+                choice = node_y.pick_best_mcts().col_pos
         print(choice)
         if choice == -1:
             break
@@ -323,7 +334,4 @@ def test_mcts_selection():
 
 
 if __name__ == "__main__":
-    board = init_board()
-    node = Node(board)
-    board = play_game(node, algo_r="mcts", algo_y="mcts")
-    print(board)
+    play(algo_r="mcts")

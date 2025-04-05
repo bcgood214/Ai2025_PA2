@@ -153,3 +153,29 @@ def terminal(board, player, x, y, verbose=False):
     if over:
         return over
     return False
+
+def place(board, player, col):
+    i = 0
+    current_pos = 0
+    for place in board[: , col]:
+        if place == 'O' and i < 5:
+            current_pos = i
+        elif place != 'O':
+            board[current_pos, col] = player
+            break
+        else:
+            board[i, col] = player
+            break
+        i += 1
+    
+    return board, current_pos, col
+
+def get_next_moves(board, player):
+    boards = []
+    for _ in range(7):
+        if board[0, _] == 'O':
+            new_board = copy.deepcopy(board)
+            new_board, current_pos, col = place(new_board, player, _)
+            boards.append((new_board, current_pos, col))
+    
+    return boards
