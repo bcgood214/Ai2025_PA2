@@ -142,7 +142,7 @@ def diag_check(board, player, x, y, verbose=False):
         return True
     return False
 
-def terminal(board, player, x, y, verbose=False):
+def terminal(board, player, x, y, verbose=True):
     over = diag_check(board, player, x, y)
     if over:
         return over

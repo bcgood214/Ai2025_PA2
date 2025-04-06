@@ -1,11 +1,14 @@
 import numpy as np
 import copy
 import check_state
+import math
 
 def place(board, player, col):
     i = 0
     current_pos = 0
     for place in board[: , col]:
+        if place != 'O' and i == 0:
+            break
         if place == 'O' and i < 5:
             current_pos = i
         elif place != 'O':
@@ -55,6 +58,11 @@ class Node:
     def print_child_states(self):
         for child in self.children:
             print(child.state)
+    
+    def uct_value(self, c=1.41):
+        if self.playouts == 0:
+            return float('inf')
+        return self.wins / self.playouts + c * math.sqrt(math.log(self.parent.playouts) / self.playouts)
     
     def state_equal(self, board):
         i = 0
@@ -109,6 +117,20 @@ class Node:
             if child.playouts == 0:
                 continue
             rate = child.wins / child.playouts
+            if rate > best_rate:
+                rate = best_rate
+                best_child = child
+        
+        return best_child
+    
+    def pick_best_uct(self):
+        best_child = self.children[0]
+        best_rate = 0
+
+        for child in self.children:
+            if child.playouts == 0:
+                continue
+            rate = child.uct_value()
             if rate > best_rate:
                 rate = best_rate
                 best_child = child

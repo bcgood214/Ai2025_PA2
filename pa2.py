@@ -4,6 +4,7 @@ import copy
 from mcts import Node
 import check_state
 from tree import Tree
+import tree_search as ts
 
 def read_file(name):
     algo = ""
@@ -268,6 +269,8 @@ def place(board, player, col):
     i = 0
     current_pos = 0
     for place in board[: , col]:
+        if place != 'O' and i == 0:
+            break
         if place == 'O' and i < 5:
             current_pos = i
         elif place != 'O':
@@ -280,15 +283,17 @@ def place(board, player, col):
     
     return board, current_pos, col
 
-def play(first_move="R", algo_r="ur", algo_y="ur"):
+def play(first_move="R", algo_r="ur", algo_y="ur", algo_r_iter=5, algo_y_iter=5):
     board = init_board()
     if algo_r == "mcts":
         node_r = Node(board)
         tree_r = Tree(node_r)
-    if algo_r == "mcts":
+    if algo_y == "mcts":
         node_y  = Node(board)
         node_y.player = "Y"
         tree_y = Tree(node_y, move="Y")
+    if algo_r == "uct":
+        pass
     player = first_move
     over = False
     while not over:
@@ -296,20 +301,20 @@ def play(first_move="R", algo_r="ur", algo_y="ur"):
             if algo_r == "ur":
                 choice = ur(board, player)
             if algo_r == "mcts":
-                node_r = tree_r.find_from_curr(board)
-                node_r.tree_search()
-                choice = node_r.pick_best_mcts().col_pos
+                choice = ts.monte_carlo_tree_search(board, algo_r_iter, random=True)[1]
+            if algo_r == "uct":
+                choice = ts.monte_carlo_tree_search(board, algo_r_iter)[1]
         else:
             if algo_y == "ur":
                 choice = ur(board, player)
             if algo_y == "mcts":
-                node_y = tree_y.find_from_curr(board)
-                node_y.tree_search()
-                choice = node_y.pick_best_mcts().col_pos
+                choice = ts.monte_carlo_tree_search(board, algo_y_iter, random=True)[1]
+            if algo_y == "uct":
+                choice = ts.monte_carlo_tree_search(board, algo_y_iter, player=player)[1]
         print(choice)
         if choice == -1:
             break
-        
+
         board, x, y = place(board, player, choice)
         print(f"Board: {board}")
         print(f"row: {x}, column: {y}")
@@ -334,4 +339,4 @@ def test_mcts_selection():
 
 
 if __name__ == "__main__":
-    play(algo_r="mcts")
+    play(algo_r="mcts", algo_r_iter=100)
