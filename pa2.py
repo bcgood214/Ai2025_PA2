@@ -1,10 +1,11 @@
 # Benjamin Good, Spring 2025
 import numpy as np
-import copy
+import sys, copy
 from mcts import Node
 import check_state
 from tree import Tree
 import tree_search as ts
+from connect4 import check_winner
 
 def read_file(name):
     algo = ""
@@ -24,7 +25,7 @@ def ur(board, player, runs = 0):
             if row[i] == 'O':
                 open[i] = 1
     
-    print(open)
+    # print(open)
     
     if open.count(1) > 0:
         while True:
@@ -283,8 +284,12 @@ def place(board, player, col):
     
     return board, current_pos, col
 
-def play(first_move="R", algo_r="ur", algo_y="ur", algo_r_iter=5, algo_y_iter=5):
-    board = init_board()
+def play(first_move="R", algo_r="ur", algo_y="ur", algo_r_iter=5, algo_y_iter=5, verbose="None", board=None):
+    if board is None:
+        board = init_board()
+    else:
+        board = board
+    winner = 0
     if algo_r == "mcts":
         node_r = Node(board)
         tree_r = Tree(node_r)
@@ -296,6 +301,7 @@ def play(first_move="R", algo_r="ur", algo_y="ur", algo_r_iter=5, algo_y_iter=5)
         pass
     player = first_move
     over = False
+    choice = -1
     while not over:
         if player == "R":
             if algo_r == "ur":
@@ -311,22 +317,25 @@ def play(first_move="R", algo_r="ur", algo_y="ur", algo_r_iter=5, algo_y_iter=5)
                 choice = ts.monte_carlo_tree_search(board, algo_y_iter, random=True)[1]
             if algo_y == "uct":
                 choice = ts.monte_carlo_tree_search(board, algo_y_iter, player=player)[1]
-        print(choice)
+        if verbose != "None":
+            print(choice)
         if choice == -1:
             break
 
         board, x, y = place(board, player, choice)
-        print(f"Board: {board}")
-        print(f"row: {x}, column: {y}")
+        if verbose != "None":
+            print(f"Board: {board}")
+            print(f"row: {x}, column: {y}")
         over = check_state.terminal(board, player, x, y)
         if over:
+            winner = check_winner(board)
             break
         if player == "R":
             player = "Y"
         else:
             player = "R"
             
-    return board
+    return board, winner
 
 def test_mcts_selection():
     board = init_board()
@@ -337,6 +346,69 @@ def test_mcts_selection():
     print(f"Playouts: {node.playouts}")
     print(f"Wins: {node.wins}")
 
+def tournament(verbose="None"):
+    board, winner = play(algo_r="ur", algo_y="mcts", algo_y_iter=500, verbose=verbose)
+    print(f"Run #1: {winner}")
+    print(board)
+    board, winner = play(algo_r="ur", algo_y="mcts", algo_y_iter=10000, verbose=verbose)
+    print(f"Run #2: {winner}")
+    print(board)
+    board, winner = play(algo_r="ur", algo_y="uct", algo_y_iter=500, verbose=verbose)
+    print(f"Run #3: {winner}")
+    print(board)
+    board, winner = play(algo_r="ur", algo_y="uct", algo_y_iter=10000, verbose=verbose)
+    print(f"Run #4: {winner}")
+    print(board)
+
+    board, winner = play(algo_r="mcts", algo_y="ur", algo_r_iter=500, verbose=verbose)
+    print(f"Run #5: {winner}")
+    board, winner = play(algo_r="mcts", algo_y="mcts", algo_r_iter=500, algo_y_iter=10000, verbose=verbose)
+    print(f"Run #6: {winner}")
+    board, winner = play(algo_r="mcts", algo_y="uct", algo_r_iter=500, algo_y_iter=500, verbose=verbose)
+    print(f"Run #7: {winner}")
+    board, winner = play(algo_r="mcts", algo_y="uct", algo_r_iter=500, algo_y_iter=10000, verbose=verbose)
+    print(f"Run #8: {winner}")
+
+    board, winner = play(algo_r="mcts", algo_y="ur", algo_r_iter=10000, verbose=verbose)
+    print(f"Run #9: {winner}")
+    board, winner = play(algo_r="mcts", algo_y="mcts", algo_r_iter=10000, algo_y_iter=500, verbose=verbose)
+    print(f"Run #10: {winner}")
+    board, winner = play(algo_r="mcts", algo_y="uct", algo_r_iter=10000, algo_y_iter=500, verbose=verbose)
+    print(f"Run #11: {winner}")
+    board, winner = play(algo_r="mcts", algo_y="uct", algo_r_iter=10000, algo_y_iter=10000, verbose=verbose)
+    print(f"Run #12: {winner}")
+
+    play(algo_r="uct", algo_y="ur", algo_r_iter=500, verbose=verbose)
+    print(f"Run #13: {winner}")
+    play(algo_r="uct", algo_y="mcts", algo_r_iter=500, algo_y_iter=500, verbose=verbose)
+    print(f"Run #14: {winner}")
+    play(algo_r="uct", algo_y="mcts", algo_r_iter=500, algo_y_iter=10000, verbose=verbose)
+    print(f"Run #15: {winner}")
+    play(algo_r="uct", algo_y="uct", algo_r_iter=500, algo_y_iter=10000, verbose=verbose)
+    print(f"Run #16: {winner}")
+
+    play(algo_r="uct", algo_y="ur", algo_r_iter=10000, verbose=verbose)
+    print(f"Run #17: {winner}")
+    play(algo_r="uct", algo_y="mcts", algo_r_iter=10000, algo_y_iter=500, verbose=verbose)
+    print(f"Run #18: {winner}")
+    play(algo_r="uct", algo_y="mcts", algo_r_iter=10000, algo_y_iter=10000, verbose=verbose)
+    print(f"Run #19: {winner}")
+    play(algo_r="uct", algo_y="uct", algo_r_iter=10000, algo_y_iter=500, verbose=verbose)
+    print(f"Run #20: {winner}")
+
+def get_cli():
+    filename = sys.argv[1]
+    verbose = sys.argv[2]
+    if verbose == "No":
+        verbose = "None"
+    runs = sys.argv[3]
+    algo, player, board = read_file(filename)
+    if player == 'Y':
+        return play(first_move='Y', algo_y=algo.strip().lower(), algo_y_iter=int(runs), verbose=verbose, board=board)
+    print(f"{algo}, {player}, {board}")
+    return play(first_move='R', algo_r=algo.strip().lower(), algo_r_iter=int(runs), verbose=verbose, board=board)
+
+
 
 if __name__ == "__main__":
-    play(algo_r="mcts", algo_r_iter=100)
+    tournament()

@@ -24,7 +24,7 @@ class Node:
 def monte_carlo_tree_search(root_state, iterations, player='R', random=False):
     root_node = Node(root_state)
     if check_winner(root_state) != 0:
-        print(root_state)
+        # print(root_state)
         return (root_node, -1)
 
     for _ in range(iterations):
